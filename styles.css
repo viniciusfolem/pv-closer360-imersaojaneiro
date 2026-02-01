@@ -661,8 +661,18 @@ section {
         font-size: 3rem;
     }
 
+    .stack-total {
+        padding: 2rem 1rem;
+    }
+
+    .stack-total-label {
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
+
     .stack-total-value {
-        font-size: 3rem;
+        font-size: clamp(1.8rem, 8vw, 3rem);
+        word-break: break-word;
     }
 
     .guarantee {
