@@ -887,7 +887,7 @@ section:not(.hero-section) .fade-in.visible {
 .forma-pagamento {
     font-size: 1.1rem;
     color: var(--color-text-gray);
-    margin-bottom: 3rem;
+    margin-bottom: 15px;
 }
 
 /* Urgencia Box */
@@ -897,7 +897,7 @@ section:not(.hero-section) .fade-in.visible {
     padding: 2.5rem;
     border-radius: 24px;
     max-width: 650px;
-    margin: 0 auto 3rem;
+    margin: 15px auto 3rem;
     backdrop-filter: blur(10px);
     animation: borderGlow 3s ease-in-out infinite;
 }
@@ -1348,12 +1348,6 @@ section:not(.hero-section) .fade-in.visible {
 
     .countdown-item small {
         font-size: 0.6rem;
-    }
-
-    .badge-destaque {
-        padding: 12px 24px;
-        font-size: 0.75rem;
-        letter-spacing: 2px;
     }
 
     .urgencia-box,
