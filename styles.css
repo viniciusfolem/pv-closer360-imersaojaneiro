@@ -75,15 +75,16 @@ body::before {
 section {
     padding: var(--section-padding);
     position: relative;
+    contain: layout style paint;
 }
 
 /* ===== ANIMATIONS ===== */
 @keyframes pulse {
     0%, 100% {
-        transform: scale(1);
+        transform: scale3d(1, 1, 1);
     }
     50% {
-        transform: scale(1.03);
+        transform: scale3d(1.03, 1.03, 1);
     }
 }
 
@@ -99,11 +100,11 @@ section {
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translate3d(0, 30px, 0);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
@@ -118,10 +119,10 @@ section {
 
 @keyframes float {
     0%, 100% {
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translate3d(0, -10px, 0);
     }
 }
 
@@ -165,6 +166,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .pulse {
     animation: pulse 2s ease-in-out infinite, pulseGlow 2s ease-in-out infinite;
+    will-change: transform;
 }
 
 /* ===== TYPOGRAPHY ===== */
@@ -253,7 +255,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .cta-button:hover {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-    transform: translateY(-3px) scale(1.02);
+    transform: translate3d(0, -3px, 0) scale3d(1.02, 1.02, 1);
     box-shadow: 0 12px 40px rgba(34, 197, 94, 0.5);
 }
 
@@ -516,7 +518,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .check-list li:hover {
     border-color: var(--color-border-hover);
-    transform: translateX(8px);
+    transform: translate3d(8px, 0, 0);
     background: rgba(241, 196, 15, 0.03);
 }
 
@@ -594,7 +596,7 @@ section:not(.hero-section) .fade-in.visible {
 }
 
 .autoridade-image:hover img {
-    transform: translateY(-5px);
+    transform: translate3d(0, -5px, 0);
     box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 50px rgba(241, 196, 15, 0.15);
 }
 
@@ -680,7 +682,7 @@ section:not(.hero-section) .fade-in.visible {
 }
 
 .video-testimonial-card:hover {
-    transform: translateY(-10px);
+    transform: translate3d(0, -10px, 0);
     border-color: var(--color-accent-gold);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(241, 196, 15, 0.1);
 }
@@ -740,7 +742,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .video-facade:hover .video-play-btn {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translate3d(-50%, -50%, 0) scale3d(1.1, 1.1, 1);
     background: rgba(255, 0, 0, 1);
 }
 
@@ -794,7 +796,7 @@ section:not(.hero-section) .fade-in.visible {
 }
 
 .modulo-item:hover {
-    transform: translateX(12px);
+    transform: translate3d(12px, 0, 0);
     border-color: var(--color-accent-gold);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(241, 196, 15, 0.1);
 }
@@ -898,6 +900,7 @@ section:not(.hero-section) .fade-in.visible {
     line-height: 1;
     text-shadow: 0 0 60px rgba(241, 196, 15, 0.5), 0 0 100px rgba(241, 196, 15, 0.3);
     animation: float 3s ease-in-out infinite;
+    will-change: transform;
 }
 
 .forma-pagamento {
@@ -950,7 +953,7 @@ section:not(.hero-section) .fade-in.visible {
 }
 
 .garantia-box:hover {
-    transform: translateY(-5px);
+    transform: translate3d(0, -5px, 0);
     box-shadow: 0 15px 50px rgba(34, 197, 94, 0.2);
 }
 
@@ -958,6 +961,7 @@ section:not(.hero-section) .fade-in.visible {
     font-size: 4rem;
     flex-shrink: 0;
     animation: float 3s ease-in-out infinite;
+    will-change: transform;
 }
 
 .garantia-content h3 {
@@ -1009,7 +1013,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .faq-item:hover {
     border-color: var(--color-border-hover);
-    transform: translateY(-2px);
+    transform: translate3d(0, -2px, 0);
 }
 
 .faq-item.active {
@@ -1096,7 +1100,7 @@ section:not(.hero-section) .fade-in.visible {
 
 .exclusion-list li:hover {
     background: rgba(239, 68, 68, 0.1);
-    transform: translateX(8px);
+    transform: translate3d(8px, 0, 0);
 }
 
 .x-icon {
