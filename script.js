@@ -84,6 +84,11 @@ function initSmoothScroll() {
             const targetSection = document.querySelector(targetId);
             if (targetSection) {
                 e.preventDefault();
+                // Reveal all fade-in elements in the target section before scrolling
+                // so the browser calculates the correct scroll position
+                targetSection.querySelectorAll('.fade-in').forEach(el => {
+                    el.classList.add('visible');
+                });
                 targetSection.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
