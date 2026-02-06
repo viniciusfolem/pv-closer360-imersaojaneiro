@@ -85,10 +85,21 @@ function initSmoothScroll() {
             if (targetSection) {
                 e.preventDefault();
                 // Reveal all fade-in elements in the target section before scrolling
-                // so the browser calculates the correct scroll position
                 targetSection.querySelectorAll('.fade-in').forEach(el => {
                     el.classList.add('visible');
                 });
+
+                // For #oferta, scroll to the checkout button so it's visible
+                if (targetId === '#oferta') {
+                    const ctaButton = targetSection.querySelector('a.cta-button');
+                    if (ctaButton) {
+                        const buttonRect = ctaButton.getBoundingClientRect();
+                        const scrollTarget = window.pageYOffset + buttonRect.top - (window.innerHeight * 0.65);
+                        window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                        return;
+                    }
+                }
+
                 targetSection.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
