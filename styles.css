@@ -90,10 +90,10 @@ section {
 
 @keyframes pulseGlow {
     0%, 100% {
-        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4), 0 0 0 0 rgba(34, 197, 94, 0.4);
+        opacity: 0.9;
     }
     50% {
-        box-shadow: 0 8px 40px rgba(34, 197, 94, 0.6), 0 0 20px 5px rgba(34, 197, 94, 0.3);
+        opacity: 1;
     }
 }
 
@@ -128,21 +128,21 @@ section {
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 4px 20px rgba(241, 196, 15, 0.4), inset 0 0 20px rgba(241, 196, 15, 0.1);
+        opacity: 0.85;
     }
     50% {
-        box-shadow: 0 4px 40px rgba(241, 196, 15, 0.6), inset 0 0 30px rgba(241, 196, 15, 0.2);
+        opacity: 1;
     }
 }
 
 @keyframes borderGlow {
     0%, 100% {
         border-color: var(--color-accent-gold);
-        box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+        opacity: 0.9;
     }
     50% {
         border-color: var(--color-accent-gold-light);
-        box-shadow: 0 0 40px rgba(241, 196, 15, 0.5);
+        opacity: 1;
     }
 }
 
@@ -1564,6 +1564,44 @@ section:not(.hero-section) .fade-in.visible {
     .floating-cta .cta-button {
         font-size: 0.85rem;
         padding: 16px 20px;
+    }
+}
+
+/* ===== CONTENT VISIBILITY FOR BELOW-FOLD SECTIONS ===== */
+.confronto-section,
+.para-quem-section,
+.transformacao-section,
+.autoridade-section,
+.prova-social-section,
+.breakdown-section,
+.faq-section,
+.nao-e-section,
+.ultima-chamada-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 800px;
+}
+
+/* ===== REDUCE EXPENSIVE EFFECTS ON MOBILE ===== */
+@media (max-width: 768px) {
+    .video-testimonial-card,
+    .modulo-item,
+    .faq-item,
+    .urgencia-box,
+    .garantia-box,
+    .countdown-final {
+        backdrop-filter: none;
+    }
+
+    body::before {
+        display: none;
+    }
+
+    .preco-gigante {
+        animation: none;
+    }
+
+    .garantia-icon {
+        animation: none;
     }
 }
 

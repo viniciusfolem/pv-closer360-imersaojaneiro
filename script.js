@@ -1,59 +1,72 @@
 // ===== COUNTDOWN TIMER =====
 function initCountdown() {
-    // Define end time - end of today at 23:59:59
     const now = new Date();
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).getTime();
+
+    // Cache DOM references once
+    const hoursElements = document.querySelectorAll('[id^="hours"]');
+    const minutesElements = document.querySelectorAll('[id^="minutes"]');
+    const secondsElements = document.querySelectorAll('[id^="seconds"]');
+
+    let lastH = -1, lastM = -1, lastS = -1;
 
     function updateCountdown() {
-        const now = new Date().getTime();
-        const distance = endOfDay.getTime() - now;
+        const distance = endOfDay - Date.now();
 
         if (distance < 0) {
-            // Reset for next day if timer expires
-            document.querySelectorAll('[id^="hours"]').forEach(el => el.textContent = '00');
-            document.querySelectorAll('[id^="minutes"]').forEach(el => el.textContent = '00');
-            document.querySelectorAll('[id^="seconds"]').forEach(el => el.textContent = '00');
+            if (lastH !== 0 || lastM !== 0 || lastS !== 0) {
+                hoursElements.forEach(el => el.textContent = '00');
+                minutesElements.forEach(el => el.textContent = '00');
+                secondsElements.forEach(el => el.textContent = '00');
+                lastH = lastM = lastS = 0;
+            }
             return;
         }
 
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        const h = Math.floor(distance / 3600000) % 24;
+        const m = Math.floor(distance / 60000) % 60;
+        const s = Math.floor(distance / 1000) % 60;
 
-        // Update all countdown displays
-        const hoursElements = document.querySelectorAll('[id^="hours"]');
-        const minutesElements = document.querySelectorAll('[id^="minutes"]');
-        const secondsElements = document.querySelectorAll('[id^="seconds"]');
-
-        hoursElements.forEach(el => el.textContent = hours.toString().padStart(2, '0'));
-        minutesElements.forEach(el => el.textContent = minutes.toString().padStart(2, '0'));
-        secondsElements.forEach(el => el.textContent = seconds.toString().padStart(2, '0'));
+        // Only update DOM when values change
+        if (h !== lastH) {
+            const hStr = h < 10 ? '0' + h : '' + h;
+            hoursElements.forEach(el => el.textContent = hStr);
+            lastH = h;
+        }
+        if (m !== lastM) {
+            const mStr = m < 10 ? '0' + m : '' + m;
+            minutesElements.forEach(el => el.textContent = mStr);
+            lastM = m;
+        }
+        if (s !== lastS) {
+            const sStr = s < 10 ? '0' + s : '' + s;
+            secondsElements.forEach(el => el.textContent = sStr);
+            lastS = s;
+        }
     }
 
-    // Initial update
     updateCountdown();
-
-    // Update every second
     setInterval(updateCountdown, 1000);
 }
 
 // ===== FAQ ACCORDION =====
 function initFAQ() {
-    const faqItems = document.querySelectorAll('.faq-item');
+    const faqList = document.querySelector('.faq-list');
+    if (!faqList) return;
 
-    faqItems.forEach(item => {
-        const question = item.querySelector('.faq-question');
+    // Event delegation instead of per-item listeners
+    faqList.addEventListener('click', function(e) {
+        const question = e.target.closest('.faq-question');
+        if (!question) return;
 
-        question.addEventListener('click', () => {
-            const wasActive = item.classList.contains('active');
-            faqItems.forEach(otherItem => {
-                otherItem.classList.remove('active');
-            });
+        const item = question.parentElement;
+        const wasActive = item.classList.contains('active');
 
-            if (!wasActive) {
-                item.classList.add('active');
-            }
-        });
+        faqList.querySelectorAll('.faq-item.active').forEach(el => el.classList.remove('active'));
+
+        if (!wasActive) {
+            item.classList.add('active');
+        }
     });
 }
 
@@ -84,12 +97,10 @@ function initSmoothScroll() {
             const targetSection = document.querySelector(targetId);
             if (targetSection) {
                 e.preventDefault();
-                // Reveal all fade-in elements in the target section before scrolling
                 targetSection.querySelectorAll('.fade-in').forEach(el => {
                     el.classList.add('visible');
                 });
 
-                // For #oferta, scroll to the checkout button so it's visible
                 if (targetId === '#oferta') {
                     const ctaButton = targetSection.querySelector('a.cta-button');
                     if (ctaButton) {
@@ -120,8 +131,7 @@ function initScrollAnimations() {
         });
     }, { threshold: 0.01, rootMargin: '0px 0px 50px 0px' });
 
-    const fadeElements = document.querySelectorAll('.fade-in');
-    fadeElements.forEach(element => {
+    document.querySelectorAll('section:not(.hero-section) .fade-in').forEach(element => {
         observer.observe(element);
     });
 }

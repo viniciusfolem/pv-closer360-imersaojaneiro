@@ -31,15 +31,14 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=swap" as="style" fetchpriority="high" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=swap"></noscript>
 
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KDKH9M44');</script>
-    <!-- End Google Tag Manager -->
-
-    <!-- Fonts loaded via preload above -->
+    <!-- Inline Critical CSS for LCP -->
+    <style>
+        .hero-section{background:#05060a;padding:60px 20px 80px;text-align:center;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center}
+        .hero-section .container{position:relative;z-index:2;width:100%}
+        .hero-title{font-family:'Poltawski Nowy',serif;font-size:clamp(2.25rem,6.5vw,4.5rem);font-weight:700;line-height:1.15;margin-bottom:1.5rem;color:#fff;text-wrap:balance}
+        .hero-title .highlight{color:#f1c40f}
+        .hero-section .fade-in{opacity:1;transform:none}
+    </style>
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css" fetchpriority="high">
@@ -51,6 +50,7 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
+    <main>
     <!-- Hero Section -->
     <section id="hero" class="hero-section">
         <div class="container">
@@ -403,6 +403,8 @@
         </div>
     </section>
 
+    </main>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -416,6 +418,19 @@
     </div>
 
     <script src="script.js" defer></script>
+
+    <!-- Google Tag Manager (deferred to not block FCP/LCP) -->
+    <script>
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-KDKH9M44');
+        }, 1500);
+    });
+    </script>
 </body>
 
 </html>
