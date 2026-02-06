@@ -825,7 +825,7 @@ section:not(.hero-section) .fade-in.visible {
     background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-dark) 50%, var(--color-bg-secondary) 100%);
     text-align: center;
     position: relative;
-    padding: 120px 20px;
+    padding: 60px 20px;
 }
 
 .oferta-section::before {
