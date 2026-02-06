@@ -165,7 +165,7 @@ section:not(.hero-section) .fade-in.visible {
 }
 
 .pulse {
-    animation: pulse 2s ease-in-out infinite, pulseGlow 2s ease-in-out infinite;
+    animation: pulse 2s ease-in-out infinite;
     will-change: transform;
 }
 
@@ -900,7 +900,6 @@ section:not(.hero-section) .fade-in.visible {
     line-height: 1;
     text-shadow: 0 0 60px rgba(241, 196, 15, 0.5), 0 0 100px rgba(241, 196, 15, 0.3);
     animation: float 3s ease-in-out infinite;
-    will-change: transform;
 }
 
 .forma-pagamento {
@@ -961,7 +960,6 @@ section:not(.hero-section) .fade-in.visible {
     font-size: 4rem;
     flex-shrink: 0;
     animation: float 3s ease-in-out infinite;
-    will-change: transform;
 }
 
 .garantia-content h3 {
@@ -1596,12 +1594,42 @@ section:not(.hero-section) .fade-in.visible {
         display: none;
     }
 
+    /* Remove all section pseudo-element gradients on mobile */
+    .hero-section::before,
+    .hero-section::after,
+    .confronto-section::before,
+    .transformacao-section::before,
+    .autoridade-section::before,
+    .prova-social-section::before,
+    .breakdown-section::before,
+    .faq-section::before,
+    .ultima-chamada-section::before {
+        display: none;
+    }
+
     .preco-gigante {
         animation: none;
     }
 
     .garantia-icon {
         animation: none;
+    }
+
+    /* Simplify hover transitions on mobile (no hover on touch) */
+    .check-list li,
+    .exclusion-list li,
+    .modulo-item,
+    .video-testimonial-card,
+    .faq-item,
+    .garantia-box,
+    .autoridade-image img {
+        transition: none;
+    }
+
+    /* Remove pulse animation on floating CTA to reduce paint */
+    .floating-cta .cta-button {
+        animation: none;
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4);
     }
 }
 

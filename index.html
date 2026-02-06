@@ -16,32 +16,55 @@
     <meta property="og:locale" content="pt_BR">
     <meta name="twitter:card" content="summary_large_image">
 
-    <!-- Preconnect & DNS Prefetch -->
+    <!-- Preconnect: only what's needed for first paint -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://i.ytimg.com">
-    <link rel="preconnect" href="https://www.youtube.com">
-    <link rel="preconnect" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://chk.eduzz.com">
+    <link rel="dns-prefetch" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://connect.facebook.net">
-    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="styles.css" as="style" fetchpriority="high">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=swap" as="style" fetchpriority="high" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=swap"></noscript>
+    <!-- Fonts: async load with font-display: optional to not block LCP -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poltawski+Nowy:wght@700&display=optional"></noscript>
 
-    <!-- Inline Critical CSS for LCP -->
+    <!-- Inline Critical CSS: entire above-the-fold rendering -->
     <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#05060a;color:#fff;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        .container{max-width:1100px;margin:0 auto;padding:0 20px}
         .hero-section{background:#05060a;padding:60px 20px 80px;text-align:center;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center}
         .hero-section .container{position:relative;z-index:2;width:100%}
         .hero-title{font-family:'Poltawski Nowy',serif;font-size:clamp(2.25rem,6.5vw,4.5rem);font-weight:700;line-height:1.15;margin-bottom:1.5rem;color:#fff;text-wrap:balance}
-        .hero-title .highlight{color:#f1c40f}
-        .hero-section .fade-in{opacity:1;transform:none}
+        .hero-title .highlight{color:#f1c40f;text-shadow:0 0 30px rgba(241,196,15,0.5)}
+        .hero-section .fade-in{opacity:1!important;transform:none!important}
+        .badge-destaque{display:inline-block;background:#f1c40f;color:#05060a;font-size:clamp(0.7rem,1.8vw,0.85rem);font-weight:700;padding:10px 24px;border-radius:50px;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:2px}
+        .hero-subtitle{font-size:clamp(0.95rem,2vw,1.15rem);color:#a1a1aa;margin-bottom:1.5rem}
+        .hero-description{font-size:1.1rem;color:#d4d4d8;margin-bottom:0.75rem;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.7}
+        .hero-date{font-size:1rem;font-weight:600;color:#f1c40f;margin-bottom:2rem;letter-spacing:2px}
+        .countdown-box{background:rgba(241,196,15,0.05);border:1px solid rgba(241,196,15,0.15);padding:16px 28px;border-radius:16px;margin-bottom:1.75rem;display:inline-block}
+        .countdown-label{font-size:0.8rem;font-weight:600;color:#f1c40f;margin-bottom:10px;letter-spacing:2px;text-transform:uppercase}
+        .countdown-timer{display:flex;justify-content:center;gap:16px}
+        .countdown-item{text-align:center;background:rgba(0,0,0,0.4);padding:10px 16px;border-radius:10px;min-width:70px}
+        .countdown-item span{display:block;font-family:'Poltawski Nowy',serif;font-size:2.25rem;font-weight:700;color:#f1c40f;line-height:1}
+        .countdown-item small{font-size:0.7rem;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-top:4px;display:block}
+        .hero-price{margin-bottom:1.75rem}
+        .price-old{font-size:1rem;color:#a1a1aa}
+        .price-old span{color:#ef4444;text-decoration:line-through}
+        .price-new{font-size:1.1rem;color:#fff;margin:0.5rem 0}
+        .price-new span{font-family:'Poltawski Nowy',serif;font-size:clamp(2.5rem,8vw,3.5rem);font-weight:700;color:#f1c40f;display:block;margin:6px 0}
+        .price-discount{font-size:0.85rem;color:#22c55e;font-weight:600}
+        .cta-button{display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;font-size:1rem;font-weight:700;padding:20px 50px;border-radius:12px;text-decoration:none;text-align:center;cursor:pointer;border:none;text-transform:uppercase;letter-spacing:1.5px;box-shadow:0 8px 30px rgba(34,197,94,0.4)}
+        .pulse{animation:pulse 2s ease-in-out infinite;will-change:transform}
+        @keyframes pulse{0%,100%{transform:scale3d(1,1,1)}50%{transform:scale3d(1.03,1.03,1)}}
+        @media(max-width:768px){.hero-section{padding:50px 16px 60px;min-height:auto}.hero-title{font-size:2.1rem}.hero-description{font-size:1rem}.cta-button{max-width:100%;width:100%}body{padding-bottom:90px}}
+        @media(max-width:480px){.hero-section{padding:36px 14px 50px}.hero-title{font-size:1.85rem}.badge-destaque{font-size:0.65rem;padding:8px 16px}.price-new span{font-size:2.5rem}.cta-button{padding:16px 20px;font-size:0.85rem}.countdown-box{padding:12px 16px;width:100%}.countdown-timer{gap:8px}.countdown-item{min-width:55px;padding:8px 10px}.countdown-item span{font-size:1.75rem}}
     </style>
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css" fetchpriority="high">
+    <!-- Non-critical CSS: load async -->
+    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
 </head>
 
 <body>
