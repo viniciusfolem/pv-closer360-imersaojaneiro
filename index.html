@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz - Closer Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F9FAFB;
+      color: #1F2937;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== SECTIONS ===== */
+    .section {
+      display: none;
+      opacity: 0;
+    }
+    .section.active {
+      display: flex;
+      animation: sectionIn 0.5s ease forwards;
+    }
+    .section.leaving {
+      animation: sectionOut 0.3s ease forwards;
+    }
+
+    @keyframes sectionIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes sectionOut {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-16px); }
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-bar-container {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #FFF;
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+      z-index: 1000;
+      transform: translateY(-100%);
+      transition: transform 0.4s ease;
+    }
+    .progress-bar-container.visible {
+      transform: translateY(0);
+    }
+    .progress-bar-track {
+      width: 100%; height: 6px; background: #E5E7EB;
+    }
+    .progress-bar-fill {
+      height: 100%; background: #10B981;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+
+    /* ===== HERO ===== */
+    #hero {
+      min-height: 100vh;
+      flex-direction: column; justify-content: center; align-items: center;
+      padding: 40px 24px;
+    }
+    .hero-logo {
+      margin-bottom: 60px;
+      font-size: 24px; font-weight: 700; color: #10B981;
+      letter-spacing: -0.5px;
+    }
+    .hero-headline {
+      font-size: 38px; font-weight: 700; color: #1F2937;
+      text-align: center; line-height: 1.2; margin-bottom: 16px;
+      max-width: 800px;
+    }
+    .hero-subheadline {
+      font-size: 18px; color: #6B7280;
+      text-align: center; margin-bottom: 50px;
+      max-width: 700px;
+    }
+    .btn-start {
+      background: #10B981; color: #FFF;
+      font-size: 18px; font-weight: 600;
+      padding: 18px 48px; border-radius: 8px; border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-start:hover {
+      background: #059669; transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    .btn-start:active { transform: translateY(0); }
+    .trust-badges {
+      display: flex; justify-content: center; gap: 32px;
+      margin-top: 32px; font-size: 14px; color: #10B981; font-weight: 500;
+    }
+
+    /* ===== QUIZ ===== */
+    #quiz {
+      flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 80px 24px 40px;
+    }
+    .question-section {
+      max-width: 600px; width: 100%;
+    }
+    .question-title {
+      font-size: 28px; font-weight: 700; color: #1F2937;
+      text-align: center; margin-bottom: 48px;
+    }
+    .question-title.animate {
+      animation: fadeSlideIn 0.5s ease forwards;
+    }
+    .options-list {
+      list-style: none;
+    }
+    .option-card {
+      background: #FFF; border: 2px solid #E5E7EB;
+      padding: 20px 24px; border-radius: 12px; margin-bottom: 16px;
+      cursor: pointer; transition: all 0.25s ease;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+      opacity: 0; transform: translateY(12px);
+    }
+    .option-card.show {
+      opacity: 1; transform: translateY(0);
+    }
+    .option-card:hover {
+      border-color: #10B981;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+    }
+    .option-card.selected {
+      border-color: #10B981; background: #F0FDF4;
+      transform: scale(0.98);
+    }
+    .option-card.fade-out {
+      opacity: 0; transform: translateY(-8px);
+      pointer-events: none;
+    }
+    .option-text {
+      font-size: 16px; color: #1F2937; font-weight: 400;
+      flex: 1;
+    }
+    .option-card.selected .option-text { font-weight: 600; }
+    .option-icon {
+      width: 60px; height: 60px; border-radius: 12px;
+      background: #F3F4F6; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0; margin-left: 16px;
+    }
+    .question-note {
+      font-size: 14px; color: #9CA3AF; text-align: center; margin-top: 24px;
+      opacity: 0; transition: opacity 0.4s ease 0.3s;
+    }
+    .question-note.show { opacity: 1; }
+
+    /* ===== LOADING ===== */
+    #loading {
+      background: #F9FAFB; min-height: 100vh;
+      flex-direction: column; justify-content: center; align-items: center;
+      padding: 40px 20px;
+    }
+    .loading-logo {
+      margin-bottom: 60px;
+      font-size: 24px; font-weight: 700; color: #10B981;
+      letter-spacing: -0.5px;
+    }
+    .spinner {
+      width: 60px; height: 60px; margin-bottom: 40px;
+      border: 4px solid #E5E7EB; border-top-color: #10B981;
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    .loading-text {
+      font-size: 20px; color: #1F2937; font-weight: 600;
+      text-align: center; min-height: 30px;
+      transition: opacity 0.3s ease;
+    }
+    .loading-bar-track {
+      width: 100%; max-width: 400px; height: 4px;
+      background: #E5E7EB; border-radius: 4px; overflow: hidden; margin-top: 40px;
+    }
+    .loading-bar-fill {
+      height: 100%; background: #10B981; border-radius: 4px;
+      width: 0%; transition: width 0.1s linear;
+    }
+
+    /* ===== RESULT ===== */
+    #result {
+      background: #F9FAFB; min-height: 100vh;
+      flex-direction: column; align-items: center;
+      padding: 60px 24px;
+    }
+    .result-logo {
+      margin-bottom: 50px;
+      font-size: 24px; font-weight: 700; color: #10B981;
+      letter-spacing: -0.5px;
+    }
+    .result-badge {
+      width: 80px; height: 80px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; margin-bottom: 30px; border: 3px solid;
+      animation: badgePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .result-badge.qualified { background: #ECFDF5; color: #10B981; border-color: #10B981; }
+    .result-badge.partial { background: #FFF7ED; color: #F59E0B; border-color: #F59E0B; }
+    .result-badge.disqualified { background: #FEF2F2; color: #EF4444; border-color: #EF4444; }
+
+    .result-headline {
+      font-size: 36px; font-weight: 700; text-align: center;
+      margin-bottom: 16px; max-width: 700px;
+      animation: fadeSlideIn 0.8s ease 0.2s both;
+    }
+    .result-headline.qualified { color: #10B981; }
+    .result-headline.partial { color: #F59E0B; }
+    .result-headline.disqualified { color: #EF4444; }
+
+    .result-subheadline {
+      font-size: 18px; color: #6B7280; text-align: center;
+      margin-bottom: 50px; max-width: 600px;
+      animation: fadeSlideIn 0.8s ease 0.4s both;
+    }
+    .vsl-container {
+      max-width: 900px; width: 100%; margin-bottom: 50px;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+      background: #000; aspect-ratio: 16/9;
+      display: flex; align-items: center; justify-content: center;
+      color: #FFF; font-size: 18px;
+      animation: fadeSlideIn 0.8s ease 0.5s both;
+    }
+    .btn-cta {
+      background: #10B981; color: #FFF;
+      font-size: 20px; font-weight: 600;
+      padding: 20px 48px; border-radius: 12px; border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      max-width: 500px; width: 100%;
+      text-align: center; font-family: 'Inter', sans-serif;
+      transition: all 0.3s ease; text-decoration: none;
+      animation: fadeSlideIn 0.8s ease 0.6s both;
+    }
+    .btn-cta:hover {
+      background: #059669; transform: translateY(-3px);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+    .btn-cta:active { transform: translateY(0); }
+    .guarantee-text {
+      font-size: 14px; color: #6B7280; text-align: center; margin-top: 20px;
+      animation: fadeSlideIn 0.8s ease 0.7s both;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes badgePop {
+      0%   { opacity: 0; transform: scale(0.3); }
+      50%  { opacity: 1; transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 768px) {
+      .hero-headline { font-size: 28px; }
+      .hero-subheadline { font-size: 16px; }
+      .btn-start { padding: 16px 36px; font-size: 16px; }
+      .trust-badges { flex-direction: column; align-items: center; gap: 12px; }
+      .question-title { font-size: 22px; margin-bottom: 32px; }
+      #quiz { padding: 80px 16px 40px; }
+      .option-card { padding: 16px 18px; }
+      .option-text { font-size: 15px; }
+      .option-icon { width: 50px; height: 50px; font-size: 22px; }
+      .result-headline { font-size: 28px; }
+      .result-subheadline { font-size: 16px; }
+      .btn-cta { font-size: 18px; padding: 18px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container" id="progressBar">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="section active" id="hero">
+    <div class="hero-logo">CLOSER DIGITAL</div>
+    <h1 class="hero-headline">Descubra em 60 segundos se você tem o perfil para ganhar de R$ 5 a R$ 15 mil por mês trabalhando de casa como Closer Digital</h1>
+    <p class="hero-subheadline">Responda 7 perguntas rápidas e descubra se essa profissão é para você</p>
+    <button class="btn-start" id="btnStart">COMEÇAR O QUIZ AGORA</button>
+    <div class="trust-badges">
+      <span>✓ 100% Gratuito</span>
+      <span>✓ Resultado Imediato</span>
+      <span>✓ Apenas 7 Perguntas</span>
+    </div>
+  </div>
+
+  <!-- Questions -->
+  <div class="section" id="quiz">
+    <div class="question-section">
+      <h2 class="question-title" id="questionTitle"></h2>
+      <ul class="options-list" id="optionsList"></ul>
+      <p class="question-note" id="questionNote">Selecione a opção que melhor descreve você</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="section" id="loading">
+    <div class="loading-logo">CLOSER DIGITAL</div>
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText"></div>
+    <div class="loading-bar-track">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="section" id="result">
+    <div class="result-logo">CLOSER DIGITAL</div>
+    <div class="result-badge" id="resultBadge"></div>
+    <h2 class="result-headline" id="resultHeadline"></h2>
+    <p class="result-subheadline" id="resultSubheadline"></p>
+    <div class="vsl-container" id="vslContainer">
+      [INSIRA SEU VÍDEO VSL AQUI]
+    </div>
+    <a href="#checkout" class="btn-cta">GARANTIR MINHA VAGA POR R$ 47</a>
+    <p class="guarantee-text">🛡️ Garantia de 7 dias ou seu dinheiro de volta</p>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        title: "Qual é a sua situação profissional hoje?",
+        options: [
+          { text: "Trabalho com carteira assinada (CLT)", icon: "💼", points: 10 },
+          { text: "Sou autônomo/freelancer", icon: "💻", points: 10 },
+          { text: "Estou desempregado(a)", icon: "🔍", points: 10 },
+          { text: "Tenho um negócio próprio", icon: "🏢", points: 10 },
+          { text: "Sou estudante", icon: "📚", points: 10 }
+        ]
+      },
+      {
+        title: "Quanto você ganha por mês atualmente?",
+        options: [
+          { text: "Menos de R$ 2.000", icon: "💰", points: 10 },
+          { text: "De R$ 2.000 a R$ 4.000", icon: "💰", points: 10 },
+          { text: "De R$ 4.000 a R$ 6.000", icon: "💰", points: 10 },
+          { text: "De R$ 6.000 a R$ 10.000", icon: "💰", points: 10 },
+          { text: "Mais de R$ 10.000", icon: "💰", points: 10 }
+        ]
+      },
+      {
+        title: "Quanto tempo por dia você poderia dedicar a uma nova atividade?",
+        options: [
+          { text: "Menos de 1 hora", icon: "⏰", points: 5 },
+          { text: "De 1 a 2 horas", icon: "⏰", points: 10 },
+          { text: "De 2 a 4 horas", icon: "⏰", points: 15 },
+          { text: "De 4 a 6 horas", icon: "⏰", points: 15 },
+          { text: "Mais de 6 horas (dedicação total)", icon: "⏰", points: 15 }
+        ]
+      },
+      {
+        title: "Você já ouviu falar sobre a profissão de Closer Digital?",
+        options: [
+          { text: "Nunca ouvi falar", icon: "🤔", points: 10 },
+          { text: "Já ouvi, mas não sei direito o que é", icon: "💡", points: 10 },
+          { text: "Sei o que é, mas nunca tentei", icon: "📖", points: 15 },
+          { text: "Já tentei, mas sem sucesso", icon: "🔄", points: 15 },
+          { text: "Já trabalho como closer", icon: "🎯", points: 15 }
+        ]
+      },
+      {
+        title: "Como você se sente ao falar com pessoas desconhecidas?",
+        options: [
+          { text: "Muito desconfortável, evito ao máximo", icon: "😰", points: 5 },
+          { text: "Um pouco nervoso(a), mas consigo", icon: "😊", points: 10 },
+          { text: "Normal, não tenho dificuldade", icon: "🤝", points: 15 },
+          { text: "Adoro conversar com pessoas novas", icon: "⭐", points: 15 }
+        ]
+      },
+      {
+        title: "Quanto você estaria disposto(a) a investir em sua formação profissional?",
+        options: [
+          { text: "Não posso investir nada agora", icon: "🚫", points: 0, disqualifying: true },
+          { text: "Até R$ 100", icon: "💵", points: 10 },
+          { text: "De R$ 100 a R$ 500", icon: "💵", points: 15 },
+          { text: "De R$ 500 a R$ 1.000", icon: "💵", points: 15 },
+          { text: "Mais de R$ 1.000 se valer a pena", icon: "💵", points: 15 }
+        ]
+      },
+      {
+        title: "Qual frase mais te representa?",
+        options: [
+          { text: "Quero uma renda extra sem sair de casa", icon: "🏠", points: 10 },
+          { text: "Quero trocar meu emprego por algo melhor", icon: "🔀", points: 15 },
+          { text: "Quero uma profissão com ganhos ilimitados", icon: "🚀", points: 15 },
+          { text: "Quero ajudar pessoas enquanto ganho bem", icon: "❤️", points: 15 },
+          { text: "Só estou curioso(a) mesmo", icon: "👀", points: 5 }
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let totalPoints = 0;
+    let hasDisqualifying = false;
+    let isTransitioning = false;
+
+    // Cache DOM elements
+    const $progressBar = document.getElementById('progressBar');
+    const $progressFill = document.getElementById('progressFill');
+    const $questionTitle = document.getElementById('questionTitle');
+    const $optionsList = document.getElementById('optionsList');
+    const $questionNote = document.getElementById('questionNote');
+    const $loadingText = document.getElementById('loadingText');
+    const $loadingBarFill = document.getElementById('loadingBarFill');
+
+    function transitionTo(targetId) {
+      return new Promise(resolve => {
+        const current = document.querySelector('.section.active');
+        const target = document.getElementById(targetId);
+
+        if (current) {
+          current.classList.add('leaving');
+          current.addEventListener('animationend', function handler() {
+            current.removeEventListener('animationend', handler);
+            current.classList.remove('active', 'leaving');
+            target.classList.add('active');
+            target.addEventListener('animationend', function h2() {
+              target.removeEventListener('animationend', h2);
+              resolve();
+            }, { once: true });
+          }, { once: true });
+        } else {
+          target.classList.add('active');
+          resolve();
+        }
+      });
+    }
+
+    function updateProgress() {
+      const pct = ((currentQuestion + 1) / questions.length) * 100;
+      $progressFill.style.width = pct + '%';
+    }
+
+    function renderQuestion(fadeIn) {
+      const q = questions[currentQuestion];
+
+      // Title
+      $questionTitle.textContent = q.title;
+      $questionTitle.classList.remove('animate');
+      void $questionTitle.offsetHeight;
+      $questionTitle.classList.add('animate');
+
+      // Note
+      $questionNote.classList.remove('show');
+      void $questionNote.offsetHeight;
+      $questionNote.classList.add('show');
+
+      // Options
+      $optionsList.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const li = document.createElement('li');
+        li.className = 'option-card';
+        li.innerHTML = `
+          <span class="option-text">${opt.text}</span>
+          <span class="option-icon">${opt.icon}</span>
+        `;
+        li.addEventListener('click', () => selectOption(i));
+        $optionsList.appendChild(li);
+
+        // Staggered entrance
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            li.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+            li.classList.add('show');
+          }, i * 60);
+        });
+      });
+
+      updateProgress();
+    }
+
+    function selectOption(index) {
+      if (isTransitioning) return;
+      isTransitioning = true;
+
+      const opt = questions[currentQuestion].options[index];
+      totalPoints += opt.points;
+      if (opt.disqualifying) hasDisqualifying = true;
+
+      // Visual feedback on selected
+      const cards = $optionsList.querySelectorAll('.option-card');
+      cards[index].classList.add('selected');
+
+      // Fade out all cards after brief pause
+      setTimeout(() => {
+        cards.forEach((card, i) => {
+          setTimeout(() => {
+            card.classList.add('fade-out');
+          }, i * 40);
+        });
+
+        // Next question after fade-out
+        setTimeout(() => {
+          currentQuestion++;
+          if (currentQuestion < questions.length) {
+            renderQuestion(true);
+            isTransitioning = false;
+          } else {
+            showLoading();
+          }
+        }, cards.length * 40 + 200);
+      }, 300);
+    }
+
+    function startQuiz() {
+      transitionTo('quiz').then(() => {
+        $progressBar.classList.add('visible');
+        renderQuestion(true);
+      });
+    }
+
+    function showLoading() {
+      $progressBar.classList.remove('visible');
+      transitionTo('loading').then(() => {
+        const texts = [
+          "Analisando suas respostas...",
+          "Calculando seu perfil ideal...",
+          "Preparando seu resultado..."
+        ];
+        const durations = [1800, 1800, 1400];
+        const totalDuration = durations.reduce((a, b) => a + b, 0);
+
+        let elapsed = 0;
+        texts.forEach((txt, i) => {
+          setTimeout(() => {
+            $loadingText.style.opacity = '0';
+            setTimeout(() => {
+              $loadingText.textContent = txt;
+              $loadingText.style.opacity = '1';
+            }, 200);
+          }, elapsed);
+          elapsed += durations[i];
+        });
+
+        // Smooth bar animation
+        let startTime = null;
+        function animateBar(ts) {
+          if (!startTime) startTime = ts;
+          const progress = Math.min((ts - startTime) / totalDuration, 1);
+          $loadingBarFill.style.width = (progress * 100) + '%';
+          if (progress < 1) requestAnimationFrame(animateBar);
+        }
+        requestAnimationFrame(animateBar);
+
+        setTimeout(showResult, totalDuration);
+      });
+    }
+
+    function showResult() {
+      let profile;
+      if (hasDisqualifying || totalPoints < 50) {
+        profile = 'disqualified';
+      } else if (totalPoints < 80) {
+        profile = 'partial';
+      } else {
+        profile = 'qualified';
+      }
+
+      const data = {
+        qualified: {
+          icon: '✓',
+          headline: 'PARABÉNS! Você tem o perfil IDEAL para ser Closer Digital',
+          sub: 'Assista o vídeo abaixo e descubra como começar nessa profissão AGORA'
+        },
+        partial: {
+          icon: '⚠',
+          headline: 'Você TEM potencial, mas precisa trabalhar alguns pontos',
+          sub: 'Assista o vídeo e descubra como superar esses obstáculos'
+        },
+        disqualified: {
+          icon: '✕',
+          headline: 'Essa profissão pode NÃO ser para você no momento',
+          sub: 'Antes de desistir, assista esse vídeo. Talvez eu esteja errado.'
+        }
+      };
+
+      const d = data[profile];
+      const $badge = document.getElementById('resultBadge');
+      const $headline = document.getElementById('resultHeadline');
+      const $sub = document.getElementById('resultSubheadline');
+
+      $badge.className = 'result-badge ' + profile;
+      $badge.textContent = d.icon;
+      $headline.className = 'result-headline ' + profile;
+      $headline.textContent = d.headline;
+      $sub.textContent = d.sub;
+
+      transitionTo('result');
+    }
+
+    // Event listeners
+    document.getElementById('btnStart').addEventListener('click', startQuiz);
+  </script>
+</body>
+</html>
