@@ -433,13 +433,12 @@
       var vagas=Math.floor(Math.random()*6)+3;
       g('urgencyText').innerHTML='🔴 Restam apenas <strong>'+vagas+' vagas</strong> com esse valor';
 
-      // Load Vturb player script
-      var vs=document.createElement('script');
-      vs.src='https://scripts.converteai.net/0b616c7b-0c7a-4208-96b8-c19a003dfbbf/players/69661328da723d6f868bab31/v4/player.js';
-      vs.async=true;
-      document.head.appendChild(vs);
-
       tt('result').then(function(){
+        // Load Vturb player script after section is visible
+        var vs=document.createElement('script');
+        vs.src='https://scripts.converteai.net/0b616c7b-0c7a-4208-96b8-c19a003dfbbf/players/69661328da723d6f868bab31/v4/player.js';
+        vs.async=true;
+        document.head.appendChild(vs);
         if(pf==='qualified')launchConfetti();
         // Reveal CTA after 3 minutes
         setTimeout(function(){
