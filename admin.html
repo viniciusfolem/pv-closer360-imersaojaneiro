@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; color: #1E293B; font-size: 14px; }
+    header { background: #0F172A; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    header h1 { font-size: 18px; font-weight: 700; color: #10B981; flex: 1; }
+    .filters { display: flex; gap: 6px; }
+    .filter-btn { background: transparent; color: #94A3B8; border: 1px solid #334155; border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
+    .filter-btn.active, .filter-btn:hover { background: #10B981; color: #fff; border-color: #10B981; }
+    .refresh-info { font-size: 12px; color: #64748B; margin-left: auto; }
+    main { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card-label { font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .card-value { font-size: 32px; font-weight: 700; color: #0F172A; line-height: 1; }
+    .card-sub { font-size: 11px; color: #94A3B8; margin-top: 4px; }
+    .card.green .card-value { color: #059669; }
+    .card.yellow .card-value { color: #D97706; }
+    .card.red .card-value { color: #DC2626; }
+    .charts { display: grid; grid-template-columns: 1fr 320px; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .charts { grid-template-columns: 1fr; } }
+    .chart-box { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .chart-box h3 { font-size: 14px; font-weight: 700; color: #0F172A; margin-bottom: 16px; }
+    .chart-box canvas { max-height: 260px; }
+    .tables-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #0F172A; }
+    .tables-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+    .q-table { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .q-table h4 { font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 12px; line-height: 1.4; }
+    .q-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .q-bar-wrap { flex: 1; background: #F1F5F9; border-radius: 4px; height: 20px; overflow: hidden; }
+    .q-bar { height: 100%; background: #10B981; border-radius: 4px; transition: width .5s ease; }
+    .q-option-text { font-size: 11px; color: #475569; width: 180px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .q-count { font-size: 11px; font-weight: 700; color: #0F172A; width: 36px; text-align: right; flex-shrink: 0; }
+    .q-pct { font-size: 11px; color: #64748B; width: 36px; text-align: right; flex-shrink: 0; }
+    .skeleton { background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+    .empty-state { text-align: center; color: #94A3B8; padding: 40px; font-size: 13px; }
+    .error-banner { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Quiz Analytics</h1>
+  <div class="filters">
+    <button class="filter-btn active" data-period="today">Hoje</button>
+    <button class="filter-btn" data-period="7d">7 dias</button>
+    <button class="filter-btn" data-period="30d">30 dias</button>
+    <button class="filter-btn" data-period="all">Tudo</button>
+  </div>
+  <span class="refresh-info" id="refreshInfo">Atualiza em 60s</span>
+</header>
+
+<main>
+  <div id="errorBanner" style="display:none" class="error-banner"></div>
+
+  <!-- Cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">Sessões</div>
+      <div class="card-value" id="v-sessions">—</div>
+      <div class="card-sub">iniciadas</div>
+    </div>
+    <div class="card green" id="c-completion">
+      <div class="card-label">Conclusão</div>
+      <div class="card-value" id="v-completion">—</div>
+      <div class="card-sub">completaram</div>
+    </div>
+    <div class="card green" id="c-qualified">
+      <div class="card-label">Qualificados</div>
+      <div class="card-value" id="v-qualified">—</div>
+      <div class="card-sub">do total</div>
+    </div>
+    <div class="card yellow" id="c-partial">
+      <div class="card-label">Parciais</div>
+      <div class="card-value" id="v-partial">—</div>
+      <div class="card-sub">do total</div>
+    </div>
+    <div class="card red" id="c-disq">
+      <div class="card-label">Desqualificados</div>
+      <div class="card-value" id="v-disq">—</div>
+      <div class="card-sub">do total</div>
+    </div>
+    <div class="card green" id="c-cta">
+      <div class="card-label">CTA Click</div>
+      <div class="card-value" id="v-cta">—</div>
+      <div class="card-sub">dos que viram</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="chart-box">
+      <h3>Drop-off por Pergunta</h3>
+      <canvas id="chartDropoff"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Resultado</h3>
+      <canvas id="chartResults"></canvas>
+    </div>
+  </div>
+
+  <!-- Answer Distribution Tables -->
+  <div class="tables-section">
+    <h2>Distribuição de Respostas</h2>
+    <div class="tables-grid" id="tablesGrid">
+      <div class="empty-state">Carregando dados...</div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  var SUPABASE_URL = 'https://torigmjljedghnvtitvs.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvcmlnbWpsamVkZ2hudnRpdHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMzAwMjIsImV4cCI6MjA4NTkwNjAyMn0._02AKqv85F8IEt5A3LTlqHyxRGikuQxeSnJC29F_z6E';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var currentPeriod = 'today';
+  var dropoffChart = null;
+  var resultsChart = null;
+  var refreshTimer = null;
+  var refreshCountdown = 60;
+  var refreshCountdownInterval = null;
+
+  var QUESTION_LABELS = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+  var QUESTION_TITLES = [
+    'Situação profissional',
+    'Renda mensal',
+    'Tempo disponível',
+    'Conhece Closer Digital',
+    'Falar com desconhecidos',
+    'Investimento em formação',
+    'Frase representativa'
+  ];
+
+  function getDateFilter(period) {
+    var d = new Date();
+    if (period === 'today') return d.toISOString().slice(0, 10);
+    if (period === '7d') { d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); }
+    if (period === '30d') { d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10); }
+    return null;
+  }
+
+  function pct(n, d) {
+    if (!d) return '0%';
+    return Math.round((n / d) * 100) + '%';
+  }
+
+  function showError(msg) {
+    var el = document.getElementById('errorBanner');
+    el.style.display = 'block';
+    el.textContent = 'Erro ao carregar dados: ' + msg;
+  }
+
+  function hideError() {
+    document.getElementById('errorBanner').style.display = 'none';
+  }
+
+  async function fetchSummary(dateFilter) {
+    var query = sb.from('quiz_sessions').select('completed_at,result_type,cta_revealed_at,cta_clicked_at');
+    if (dateFilter) query = query.gte('created_date', dateFilter);
+    var result = await query;
+    if (result.error) throw result.error;
+    var data = result.data || [];
+    var total = data.length;
+    var completed = data.filter(function(r) { return r.completed_at; }).length;
+    var qualified = data.filter(function(r) { return r.result_type === 'qualified'; }).length;
+    var partial = data.filter(function(r) { return r.result_type === 'partial'; }).length;
+    var disqualified = data.filter(function(r) { return r.result_type === 'disqualified'; }).length;
+    var ctaRevealed = data.filter(function(r) { return r.cta_revealed_at; }).length;
+    var ctaClicked = data.filter(function(r) { return r.cta_clicked_at; }).length;
+    return { total: total, completed: completed, qualified: qualified, partial: partial, disqualified: disqualified, ctaRevealed: ctaRevealed, ctaClicked: ctaClicked };
+  }
+
+  async function fetchSessionIds(dateFilter) {
+    var query = sb.from('quiz_sessions').select('session_id');
+    if (dateFilter) query = query.gte('created_date', dateFilter);
+    var result = await query;
+    if (result.error) throw result.error;
+    return (result.data || []).map(function(r) { return r.session_id; });
+  }
+
+  async function fetchDropoff(sessionIds) {
+    if (!sessionIds.length) return { counts: {}, total: 0 };
+    var result = await sb.from('question_answers')
+      .select('session_id,question_index')
+      .in('session_id', sessionIds);
+    if (result.error) throw result.error;
+    var answers = result.data || [];
+    var counts = {};
+    var seen = {};
+    for (var i = 0; i < 7; i++) counts[i] = 0;
+    answers.forEach(function(a) {
+      var key = a.session_id + '-' + a.question_index;
+      if (!seen[key]) {
+        seen[key] = true;
+        counts[a.question_index] = (counts[a.question_index] || 0) + 1;
+      }
+    });
+    return { counts: counts, total: sessionIds.length };
+  }
+
+  async function fetchAnswerDist(sessionIds) {
+    if (!sessionIds.length) return {};
+    var result = await sb.from('question_answers')
+      .select('question_index,question_text,option_index,option_text')
+      .in('session_id', sessionIds);
+    if (result.error) throw result.error;
+    var answers = result.data || [];
+    var dist = {};
+    answers.forEach(function(a) {
+      if (!dist[a.question_index]) dist[a.question_index] = { title: a.question_text, options: {} };
+      if (!dist[a.question_index].options[a.option_index]) {
+        dist[a.question_index].options[a.option_index] = { text: a.option_text, count: 0 };
+      }
+      dist[a.question_index].options[a.option_index].count++;
+    });
+    return dist;
+  }
+
+  function renderCards(summary) {
+    document.getElementById('v-sessions').textContent = summary.total;
+    document.getElementById('v-completion').textContent = pct(summary.completed, summary.total);
+    document.getElementById('v-qualified').textContent = pct(summary.qualified, summary.total);
+    document.getElementById('v-partial').textContent = pct(summary.partial, summary.total);
+    document.getElementById('v-disq').textContent = pct(summary.disqualified, summary.total);
+    document.getElementById('v-cta').textContent = pct(summary.ctaClicked, summary.ctaRevealed);
+  }
+
+  function renderDropoffChart(dropoffData) {
+    var counts = dropoffData.counts;
+    var total = dropoffData.total;
+    var labels = QUESTION_LABELS;
+    var values = [];
+    var colors = [];
+    for (var i = 0; i < 7; i++) {
+      var pctVal = total > 0 ? Math.round(((counts[i] || 0) / total) * 100) : 0;
+      values.push(pctVal);
+      colors.push(pctVal >= 70 ? '#10B981' : pctVal >= 40 ? '#F59E0B' : '#EF4444');
+    }
+    var ctx = document.getElementById('chartDropoff').getContext('2d');
+    if (dropoffChart) dropoffChart.destroy();
+    dropoffChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '% chegou nessa pergunta',
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ctx.parsed.y + '% das sessões'; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0, max: 100,
+            ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+            grid: { color: '#F1F5F9' }
+          },
+          x: { grid: { display: false }, ticks: { font: { size: 12, weight: '600' } } }
+        }
+      }
+    });
+  }
+
+  function renderResultsChart(summary) {
+    var ctx = document.getElementById('chartResults').getContext('2d');
+    if (resultsChart) resultsChart.destroy();
+    var total = summary.qualified + summary.partial + summary.disqualified;
+    if (total === 0) {
+      resultsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#E2E8F0'] }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+      return;
+    }
+    resultsChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Qualificados', 'Parciais', 'Desqualificados'],
+        datasets: [{
+          data: [summary.qualified, summary.partial, summary.disqualified],
+          backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { size: 12 }, padding: 12, usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return ctx.label + ': ' + ctx.parsed + ' (' + pct(ctx.parsed, total) + ')';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderAnswerTables(dist) {
+    var grid = document.getElementById('tablesGrid');
+    if (!Object.keys(dist).length) {
+      grid.innerHTML = '<div class="empty-state">Nenhuma resposta registrada ainda.</div>';
+      return;
+    }
+    var html = '';
+    for (var qIdx = 0; qIdx < 7; qIdx++) {
+      var q = dist[qIdx];
+      if (!q) continue;
+      var options = q.options;
+      var optKeys = Object.keys(options).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+      var qTotal = optKeys.reduce(function(s, k) { return s + options[k].count; }, 0);
+      html += '<div class="q-table">';
+      html += '<h4>P' + (qIdx + 1) + ': ' + (q.title || QUESTION_TITLES[qIdx] || '') + '</h4>';
+      optKeys.forEach(function(k) {
+        var opt = options[k];
+        var barPct = qTotal > 0 ? Math.round((opt.count / qTotal) * 100) : 0;
+        html += '<div class="q-row">';
+        html += '<span class="q-option-text" title="' + opt.text + '">' + opt.text + '</span>';
+        html += '<div class="q-bar-wrap"><div class="q-bar" style="width:' + barPct + '%"></div></div>';
+        html += '<span class="q-count">' + opt.count + '</span>';
+        html += '<span class="q-pct">' + barPct + '%</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    grid.innerHTML = html || '<div class="empty-state">Nenhuma resposta registrada ainda.</div>';
+  }
+
+  async function loadDashboard() {
+    hideError();
+    try {
+      var dateFilter = getDateFilter(currentPeriod);
+      var summaryPromise = fetchSummary(dateFilter);
+      var sessionIdsPromise = fetchSessionIds(dateFilter);
+
+      var summary = await summaryPromise;
+      renderCards(summary);
+      renderResultsChart(summary);
+
+      var sessionIds = await sessionIdsPromise;
+      var dropoffData = await fetchDropoff(sessionIds);
+      renderDropoffChart(dropoffData);
+
+      var answerDist = await fetchAnswerDist(sessionIds);
+      renderAnswerTables(answerDist);
+    } catch (err) {
+      showError(err.message || JSON.stringify(err));
+    }
+  }
+
+  function startRefreshCountdown() {
+    if (refreshCountdownInterval) clearInterval(refreshCountdownInterval);
+    refreshCountdown = 60;
+    document.getElementById('refreshInfo').textContent = 'Atualiza em 60s';
+    refreshCountdownInterval = setInterval(function() {
+      refreshCountdown--;
+      document.getElementById('refreshInfo').textContent = 'Atualiza em ' + refreshCountdown + 's';
+      if (refreshCountdown <= 0) {
+        loadDashboard();
+        refreshCountdown = 60;
+      }
+    }, 1000);
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentPeriod = btn.dataset.period;
+      loadDashboard();
+      startRefreshCountdown();
+    });
+  });
+
+  // Init
+  loadDashboard();
+  startRefreshCountdown();
+})();
+</script>
+</body>
+</html>

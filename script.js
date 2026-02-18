@@ -20,7 +20,47 @@
   };
 
   var cq = 0, tp = 0, maxPts = 0, hd = false, isTr = false;
-  
+
+  /* ===== SUPABASE ANALYTICS ===== */
+  var _sb = null, _sid = null;
+  var _SBURL = 'https://torigmjljedghnvtitvs.supabase.co';
+  var _SBKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvcmlnbWpsamVkZ2hudnRpdHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMzAwMjIsImV4cCI6MjA4NTkwNjAyMn0._02AKqv85F8IEt5A3LTlqHyxRGikuQxeSnJC29F_z6E';
+  var _sbLoading = false, _sbQueue = [];
+  function _uuid() {
+    var d = Date.now();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = (d + Math.random() * 16) % 16 | 0;
+      d = Math.floor(d / 16);
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+  function _device() {
+    var ua = navigator.userAgent;
+    if (/Mobi|Android/i.test(ua)) return 'mobile';
+    if (/Tablet|iPad/i.test(ua)) return 'tablet';
+    return 'desktop';
+  }
+  function _utms() {
+    var p = new URLSearchParams(location.search);
+    return {source: p.get('utm_source'), medium: p.get('utm_medium'), campaign: p.get('utm_campaign')};
+  }
+  function _loadSB(cb) {
+    if (_sb) { cb(); return; }
+    _sbQueue.push(cb);
+    if (_sbLoading) return;
+    _sbLoading = true;
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload = function() {
+      _sb = window.supabase.createClient(_SBURL, _SBKEY);
+      var q = _sbQueue.slice(); _sbQueue = [];
+      q.forEach(function(f) { try { f(); } catch(e) {} });
+    };
+    s.onerror = function() { _sbLoading = false; };
+    document.head.appendChild(s);
+  }
+  function _track(fn) { _loadSB(function() { try { fn(); } catch(e) {} }); }
+
   // Calculate max possible points
   questions.forEach(function(q) {
     var mx = 0;
@@ -160,9 +200,23 @@
   function so(idx) {
     if (isTr) return;
     isTr = true;
+    var capturedCq = cq;
     var o = questions[cq].options[idx];
     tp += o.p;
     if (o.d) hd = true;
+    (function(qIdx, opt, optIdx) {
+      _track(function() {
+        _sb.from('question_answers').insert({
+          session_id: _sid, question_index: qIdx,
+          question_text: questions[qIdx].title,
+          option_index: optIdx, option_text: opt.t,
+          points_awarded: opt.p, is_disqualifier: !!opt.d,
+          answered_at: new Date().toISOString()
+        }).then(null, null);
+        _sb.from('quiz_sessions').update({questions_answered: qIdx + 1})
+          .eq('session_id', _sid).then(null, null);
+      });
+    })(capturedCq, o, idx);
 
     // Visual feedback
     var cards = oL.querySelectorAll('.option-card');
@@ -193,6 +247,19 @@
 
   /* ===== START QUIZ ===== */
   function sq() {
+    _sid = _uuid();
+    try { sessionStorage.setItem('quiz_sid', _sid); } catch(e) {}
+    var _u = _utms();
+    _track(function() {
+      _sb.from('quiz_sessions').insert({
+        session_id: _sid, started_at: new Date().toISOString(),
+        device_type: _device(), referrer: document.referrer || null,
+        utm_source: _u.source, utm_medium: _u.medium, utm_campaign: _u.campaign,
+        user_agent: navigator.userAgent.slice(0, 200),
+        created_date: new Date().toISOString().slice(0, 10),
+        questions_answered: 0
+      }).then(null, null);
+    });
     tt('quiz').then(function() { rq(); });
   }
 
@@ -260,6 +327,14 @@
 
     var pctScore = Math.round((tp / maxPts) * 100);
 
+    _track(function() {
+      _sb.from('quiz_sessions').update({
+        completed_at: new Date().toISOString(),
+        result_type: pf, final_score: tp,
+        score_pct: pctScore, had_disqualifier: hd
+      }).eq('session_id', _sid).then(null, null);
+    });
+
     var d = {
       qualified: {ic: '✓', h: 'PARABÉNS! Você tem o perfil IDEAL para ser Closer no Digital', s: 'Assista o vídeo abaixo e descubra como dar seu primeiro passo <span style="color:#10B981;font-size:1.15em;text-transform:uppercase">HOJE</span>'},
       partial: {ic: '⚠', h: 'Você TEM potencial para ser Closer no Digital!', s: 'Muitos closers de sucesso começaram exatamente no seu ponto. Assista o vídeo e veja como <span style="color:#10B981;font-size:1.15em;text-transform:uppercase">ACELERAR</span> esse processo'},
@@ -317,10 +392,18 @@
         if (window.dataLayer) {
           window.dataLayer.push({event: 'cta_revealed', result_type: pf, score: pctScore});
         }
+        _track(function() {
+          _sb.from('quiz_sessions').update({cta_revealed_at: new Date().toISOString()})
+            .eq('session_id', _sid).then(null, null);
+        });
       }, 125000);
 
       // Tracking no clique do CTA
       g('btnCta').addEventListener('click', function() {
+        _track(function() {
+          _sb.from('quiz_sessions').update({cta_clicked_at: new Date().toISOString()})
+            .eq('session_id', _sid).then(null, null);
+        });
         if (window.dataLayer) {
           window.dataLayer.push({event: 'cta_click', result_type: pf, score: pctScore});
         }
